@@ -14,7 +14,8 @@ from segment import Segment
 
 class IgnoreBehavior(Enum):
     REMOVE = 0,
-    SKIP = 1
+    SKIP = 1,
+    KEEP_ONLY = 2
 
 # input args: filename, segment file, output directory path
 # outputs: segmented files in the specified output directory (directory should already exist for now)
@@ -59,16 +60,20 @@ class InputClipper:
                     if any([re.search(x, entry['text']) for x in ignore]):
                         print("SKIPPING " + str(entry))
                         continue
+                elif skipOrRemove == IgnoreBehavior.KEEP_ONLY:
+                    if not any([re.search(x, entry['text']) for x in ignore]):
+                        continue
+                
                 self._clip(entry)
         
 def test():
     source = "../test.wav"
     segments = "seg_out.json"
-    output_dir = "output"
+    output_dir = "output_ignores"
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     clipper = InputClipper(source, segments, output_dir)
-    clipper.clip_segments(ignore=['\[*\]'])
+    clipper.clip_segments(ignore=['\[*\]'], skipOrRemove=IgnoreBehavior.KEEP_ONLY)
 
 
 test()
