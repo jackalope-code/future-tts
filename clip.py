@@ -9,11 +9,6 @@ from segment import Segment
 import sys
 import argparse
 
-# the timestamp to split at (in seconds)
-#first_timestamp = 1195.1 #102.0 incorrect #221.0 incorrect #24.6
-
-#second_timestamp = 1196.8 #106.9 incorrect #224.1 incorrect #28.0
-
 class IgnoreBehavior(Enum):
     REMOVE = 0,
     SKIP = 1,
@@ -93,7 +88,7 @@ def main():
     else:
         os.mkdir(clip_dir)
 
-    
+
 
     print(args)
 
