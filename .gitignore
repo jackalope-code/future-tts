@@ -3,3 +3,4 @@ __pycache__
 output*
 scratch
 notes.txt
+seg_out.json

@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import json
+import argparse
 
 from segment import Segment
 
@@ -9,8 +10,9 @@ url = 'https://theinfosphere.org/Transcript:Space_Pilot_3000'
 page = requests.get(url)
 
 soup = BeautifulSoup(page.text, "html.parser")
-transcript = soup.find("div", {"class": "mw-parser-output"})
-sections = transcript.find_all("div", {"class": "poem"});
+# transcript = soup.find("div", {"class": "mw-parser-output"})
+transcript = soup.find("div", {"class": "mw-body-content"})
+sections = transcript.find_all("div", {"class": "poem"})
 
 def parse_time(time_id):
     return time_id[len('time-'):].split('-')
