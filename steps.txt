@@ -1,3 +1,7 @@
 from raw dir:
 
-python ../../src/scrape.py -t test.txt	builds segment_data folder
+TRANSCRIPT SCRAPE STEP
+python ../../src/scrape.py -t test.txt	| BUILDS SEGMENT_DATA FOLDER
+
+SEGMENT CHOP STEP
+python ../../src/clip.py segment_data raw_wavs	| BUILDS OUTPUT FOLDER
