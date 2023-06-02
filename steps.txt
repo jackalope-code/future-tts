@@ -1,0 +1,3 @@
+from raw dir:
+
+python ../../src/scrape.py -t test.txt	builds segment_data folder
