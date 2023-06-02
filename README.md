@@ -13,3 +13,14 @@ Has a CLI interface. Breaks apart source .wav files using a .json file containin
 ## scrape.py
 WIP
 Custom BeautifulSoup transcript parsing for this project. Not yet standardized for other custom TTS implementations.
+
+## TODO:
+Segments are bugged on the second folder
+
+AI training test
+
+either multi voice training or filtering. somehow exact speakers must be specified.
+
+output dir is created even on errors
+
+clip.py should use default dirs
