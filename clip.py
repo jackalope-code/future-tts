@@ -119,7 +119,7 @@ def main():
         # TODO: proper subdir here
         output_subdir = os.path.join(output_dir, name)
         wav_path = os.path.join(args.wav_dir, wav_filename)
-        clipper.clip_segments(output_subdir, wav_path, filename, ignore=['\[*\]'], skipOrRemove=IgnoreBehavior.IGNORED_ONLY)
+        clipper.clip_segments(output_subdir, wav_path, filename, ignore=['\[*\]'], skipOrRemove=ignoreBehavior)
 
 if __name__ == "__main__":
     main()
