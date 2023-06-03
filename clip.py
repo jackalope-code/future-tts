@@ -88,6 +88,11 @@ class InputClipper:
 
 # TODO: clip output dir is generated even if there's errors
 # TODO: Test with fresh data to see if all folders are checked/accessed properly
+# TODO: Adding to output as long as subdirs are not overwritten should be allowed (same w/ scrape.py)
+# TODO: Refitting/retraining w/ better controls
+# TODO: Variable window variance (constant when starting the manual process)
+# TODO: Speaker filtering for the training process
+# TODO: IMPORTANT: ADD EPISODE IDENTIFIER TO GENERATED CLIPS FILENAMES AND METADATA SO THAT EACH ITEM IS UNIQUE AND WON'T OVERLAP IF EVERYTHING IS IN THE SAME FOLDER
 def main():
     parser = argparse.ArgumentParser(
                     prog='InputClipper CLI',
