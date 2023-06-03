@@ -28,7 +28,7 @@ class InputClipper:
         self.metadata = ''
         self.metadata_filename = metadata_filename
     
-    def _clip(self, output_dir_name, wav_path, segment: Segment, saveMetadata=True):
+    def _clip(self, subdir_name, wav_path, segment: Segment, saveMetadata=True):
         timestamp_start: int = int(segment['minuteStart'])*60 + int(segment['secondStart'])
         timestamp_end: int = int(segment['minuteStop'])*60 + int(segment['secondStop'])
         name = f"{segment['minuteStart']}.{segment['secondStart']}-{segment['minuteStop']}.{segment['secondStop']}_speaker={segment['speaker']}.wav"
@@ -37,16 +37,19 @@ class InputClipper:
         print("CUT WAV " + wav_path)
         rate, data = wavfile.read(wav_path) 
 
-        # get the frame to split at
-        frame_start = round(rate * (0 if timestamp_start == 0 else timestamp_start-1))
 
-        frame_end = round(rate * (timestamp_end+1))
+        duration = data.shape[0] / rate
+
+        # get the frame to split at
+        frame_start = round(rate * (0 if timestamp_start-10 < 0 else timestamp_start-10))
+
+        frame_end = round(rate * (duration if timestamp_end+10 > duration else timestamp_end+10))
 
         # split
         clip = data[frame_start:frame_end]
 
         # subdir processing
-        output_subdir = os.path.join(self.output_dir, output_dir_name)
+        output_subdir = os.path.join(self.output_dir, subdir_name)
         if not os.path.exists(output_subdir):
             os.mkdir(output_subdir)
         # save the result
@@ -95,7 +98,7 @@ def main():
     parser.add_argument('wav_dir', help='Raw wav file input directory')
     parser.add_argument('segment_dir', help='Segment file input directory.', default='segment_data', nargs='?')
     parser.add_argument('-i', '--ignore-behavior', default='no_skips')
-    parser.add_argument('output_dir', help='Path to generate clips folder in.', default='', nargs='?')
+    parser.add_argument('-o', '--output-dir', help='Path to generate clips folder in.', default='', nargs='?')
 
     args = parser.parse_args()
 
@@ -118,16 +121,17 @@ def main():
         os.mkdir(output_dir)
 
     # print(args)
-    clipper = InputClipper(args.wav_dir, args.segment_dir, args.output_dir)
+    clipper = InputClipper(args.wav_dir, args.segment_dir, output_dir)
     # Iterate by segment and clip each into a directory
     for filename in os.listdir(args.segment_dir):
         name = filename.removesuffix('_segments.json')
         wav_filename = name + '.wav'
         # TODO: proper subdir here
-        output_subdir = os.path.join(output_dir, name)
+        # output_subdir = os.path.join(output_dir, name)
+        subdir = name
         wav_path = os.path.join(args.wav_dir, wav_filename)
         # TODO: BUG ignore nothing for now bc anything else fucks up timestamps
-        clipper.clip_segments(output_subdir, wav_path, filename, ignore=['\[*\]'], skipOrRemove=ignoreBehavior)
+        clipper.clip_segments(subdir, wav_path, filename, ignore=['\[*\]'], skipOrRemove=ignoreBehavior)
         # clipper.clip_segments(output_subdir, wav_path, filename)
 
 if __name__ == "__main__":
