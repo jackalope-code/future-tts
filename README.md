@@ -15,12 +15,12 @@ WIP
 Custom BeautifulSoup transcript parsing for this project. Not yet standardized for other custom TTS implementations.
 
 ## TODO:
-Segments are bugged on the second folder
+- AI training test
+- Merge and filter pipeline?
+- Process segments and clips so that sections can be skipped through arbitrarily.
+- Add speaker filtering when working with clips/segments?? Merge/filter pipeline may make this unnecessary.
 
-AI training test
 
-either multi voice training or filtering. somehow exact speakers must be specified.
-
-output dir is created even on errors
-
-clip.py should use default dirs
+## BUGS
+- output dir is created even on errors
+- There's more bugs in comments

@@ -5,5 +5,5 @@ scratch
 notes.txt
 seg_out.json
 
-trainer.py
+train.py
 vocoder.py
