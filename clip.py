@@ -9,10 +9,13 @@ from segment import Segment
 import sys
 import argparse
 
+# TODO: implement ignore behavior
 class IgnoreBehavior(Enum):
-    REMOVE = 0,
+    REMOVE_GROUP = 0,
     SKIP = 1,
-    IGNORED_ONLY = 2
+    IGNORED_ONLY = 2,
+    NO_SKIPS = 3,
+    REMOVE_SYMBOLS = 4
 
 # input args: filename, segment file, output directory path
 # outputs: segmented files in the specified output directory (directory should already exist for now)
@@ -26,18 +29,18 @@ class InputClipper:
         self.metadata_filename = metadata_filename
     
     def _clip(self, output_dir_name, wav_path, segment: Segment, saveMetadata=True):
-        timestamp_start: int = int(segment['minuteStart'])*60 + int(segment['secondStart'])-1
-        timestamp_end: int = int(segment['minuteStop'])*60 + int(segment['secondStop'])+1
-        name = f"{timestamp_start}-{timestamp_end}s_speaker={segment['speaker']}.wav"
+        timestamp_start: int = int(segment['minuteStart'])*60 + int(segment['secondStart'])
+        timestamp_end: int = int(segment['minuteStop'])*60 + int(segment['secondStop'])
+        name = f"{segment['minuteStart']}.{segment['secondStart']}-{segment['minuteStop']}.{segment['secondStop']}_speaker={segment['speaker']}.wav"
         # read the file and get the sample rate and data
         # TODO: refactor out to clip_segments as a possible speed improvement?
         print("CUT WAV " + wav_path)
         rate, data = wavfile.read(wav_path) 
 
         # get the frame to split at
-        frame_start = round(rate * timestamp_start)
+        frame_start = round(rate * (0 if timestamp_start == 0 else timestamp_start-1))
 
-        frame_end = round(rate * timestamp_end)
+        frame_end = round(rate * (timestamp_end+1))
 
         # split
         clip = data[frame_start:frame_end]
@@ -64,11 +67,12 @@ class InputClipper:
             
             parsed: List[Segment] = json.loads(contents)#[json.loads(raw) for raw in contents]
 
+            # TODO: BUG skipping any entries fucks up timestamps
             for entry in parsed:
                 # entry = SimpleNamespace(**entry)
                 print("READING " + str(f"{entry['speaker']} from {entry['minuteStart']}:{entry['secondStart']} to {entry['minuteStop']}:{entry['secondStop']}"))
                 # break
-                if skipOrRemove == IgnoreBehavior.REMOVE:
+                if skipOrRemove == IgnoreBehavior.REMOVE_GROUP:
                     raise NotImplementedError("IgnoreBehavior.REMOVE replacement regex behavior not implemented.")
                 elif skipOrRemove == IgnoreBehavior.SKIP:
                     if any([re.search(x, entry['text']) for x in ignore]):
@@ -77,19 +81,20 @@ class InputClipper:
                 elif skipOrRemove == IgnoreBehavior.IGNORED_ONLY:
                     if not any([re.search(x, entry['text']) for x in ignore]):
                         continue
-                
                 self._clip(output_dir_name, wav_filename, entry)
 
-# TODO: clip dir is generated even if there's errors... still an issue after fixing other stuff?
+# TODO: clip output dir is generated even if there's errors
+# TODO: Test with fresh data to see if all folders are checked/accessed properly
 def main():
     parser = argparse.ArgumentParser(
                     prog='InputClipper CLI',
                     description='Clip .wav files from Segment data.')
                     # epilog='Text at the bottom of help')
-
-    parser.add_argument('segment_dir', help='Segment file input directory.')
+    
+    # parser.add_argument('segment_dir', help='Segment file input directory.')
     parser.add_argument('wav_dir', help='Raw wav file input directory')
-    parser.add_argument('-i', '--ignore-behavior', default='skip')
+    parser.add_argument('segment_dir', help='Segment file input directory.', default='segment_data', nargs='?')
+    parser.add_argument('-i', '--ignore-behavior', default='no_skips')
     parser.add_argument('output_dir', help='Path to generate clips folder in.', default='', nargs='?')
 
     args = parser.parse_args()
@@ -97,9 +102,11 @@ def main():
     if args.ignore_behavior == 'skip':
         ignoreBehavior = IgnoreBehavior.SKIP
     elif args.ignore_behavior == 'remove':
-        ignoreBehavior = IgnoreBehavior.REMOVE
+        ignoreBehavior = IgnoreBehavior.REMOVE_GROUP
     elif args.ignore_behavior == 'ignored':
         ignoreBehavior = IgnoreBehavior.IGNORED_ONLY
+    elif args.ignore_behavior == 'no_skips':
+        ignoreBehavior = IgnoreBehavior.NO_SKIPS
     else:
         raise Exception('Unknown ignore behavior specified with -i. Valid options: skip (default) | remove | ignored')
 
@@ -119,7 +126,9 @@ def main():
         # TODO: proper subdir here
         output_subdir = os.path.join(output_dir, name)
         wav_path = os.path.join(args.wav_dir, wav_filename)
+        # TODO: BUG ignore nothing for now bc anything else fucks up timestamps
         clipper.clip_segments(output_subdir, wav_path, filename, ignore=['\[*\]'], skipOrRemove=ignoreBehavior)
+        # clipper.clip_segments(output_subdir, wav_path, filename)
 
 if __name__ == "__main__":
     main()
