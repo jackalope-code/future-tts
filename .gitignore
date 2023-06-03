@@ -4,3 +4,6 @@ output*
 scratch
 notes.txt
 seg_out.json
+
+trainer.py
+vocoder.py
