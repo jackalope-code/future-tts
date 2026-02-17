@@ -37,7 +37,7 @@ def get_segments_from_url(url: str):
     sections = transcript.find_all("div", {"class": "poem"})
 
     # Parsing vars
-    segments = []
+    segments: list[Segment] = []
     last_cleaned_text = 'NO TEXT SET'
     last_speaker = 'NO_SPEAKER_SET'
     last_time = [-1, -1]
@@ -53,7 +53,7 @@ def get_segments_from_url(url: str):
 
         # Update segments
         if last_time != [-1, -1]:
-            segment = Segment(last_speaker, last_cleaned_text, last_time[0], last_time[1], current_time[0], str(int(current_time[1])-1))
+            segment = Segment(last_speaker, last_cleaned_text, last_time[0], last_time[1], current_time[0], int(current_time[1])-1)
             segments.append(segment) 
             print("SEGMENT: " + str(segment))
 
@@ -85,7 +85,7 @@ def write_segments(url: str, segment_output_filename: pathlib.Path):
         url (str): The transcript page URL.
         segment_output_filename (Path): Output file path for segments JSON.
     """
-    segments = get_segments_from_url(url)
+    segments: list[Segment] = get_segments_from_url(url)
     with open(segment_output_filename, "w+") as f:
         f.write(json.dumps(segments, default=(lambda x: x.__dict__ )))
     print("Output saved to " + str(segment_output_filename))
@@ -107,16 +107,14 @@ def main():
     args = parser.parse_args()
 
     # Output dir check/creation
-    if os.path.exists(args.output_dir):
-        raise Exception('ERROR: output_dir already exists.')
-    else:
+    if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
 
     with open(args.transcript, 'r') as f:
         for line in f:
             [full_filename, url] = line.strip().split('|')
             filename = full_filename.split('.')[0]
-            write_segments(url, os.path.join(args.output_dir, filename + "_segments.json"))
+            write_segments(url, pathlib.Path(args.output_dir) / f"{filename}_segments.json")
             print(filename)
             print(url)
 

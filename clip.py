@@ -39,17 +39,32 @@ class IgnoreBehavior(Enum):
         """
 
 class InputClipper:
-    def __init__(self, wav_dir, segment_dir, output_dir, metadata_filename="metadata.txt") -> None:
-        self.wav_dir= wav_dir
+    def __init__(self, wav_dir: str, segment_dir: str, output_dir: str, metadata_filename: str = "metadata.txt") -> None:
+        self.wav_dir = wav_dir
         self.segment_dir = segment_dir
         self.output_dir = output_dir
         self.metadata = ''
         self.metadata_filename = metadata_filename
+
+        # Early output directory loading and checks
+        if not os.path.exists(self.output_dir):
+            print(f"WARNING: Output directory '{self.output_dir}' does not exist. Please create it before running.")
+            raise FileNotFoundError(f"Output directory '{self.output_dir}' not found. Create the directory and rerun.")
+        elif not os.path.isdir(self.output_dir):
+            print(f"ERROR: '{self.output_dir}' exists but is not a directory.")
+            raise NotADirectoryError(f"'{self.output_dir}' is not a directory.")
+        else:
+            # Check for existing files
+            existing_files = os.listdir(self.output_dir)
+            if existing_files:
+                print(f"WARNING: Output directory '{self.output_dir}' is not empty. Existing files: {existing_files}")
+            else:
+                print(f"Output directory '{self.output_dir}' is ready and empty.")
     
-    def _clip(self, subdir_name, wav_path, segment: Segment, saveMetadata=True):
-        timestamp_start: int = int(segment['minuteStart'])*60 + int(segment['secondStart'])
-        timestamp_end: int = int(segment['minuteStop'])*60 + int(segment['secondStop'])
-        name = f"{segment['minuteStart']}.{segment['secondStart']}-{segment['minuteStop']}.{segment['secondStop']}_speaker={segment['speaker']}.wav"
+    def _clip(self, subdir_name: str, wav_path: str, segment: Segment, saveMetadata: bool = True) -> None:
+        timestamp_start: int = int(segment.minuteStart)*60 + int(segment.secondStart)
+        timestamp_end: int = int(segment.minuteStop)*60 + int(segment.secondStop)
+        name = f"{segment.minuteStart}.{segment.secondStart}-{segment.minuteStop}.{segment.secondStop}_speaker={segment.speaker}.wav"
         # read the file and get the sample rate and data
         # TODO: refactor out to clip_segments as a possible speed improvement?
         print("CUT WAV " + wav_path)
@@ -74,37 +89,36 @@ class InputClipper:
         wavfile.write(os.path.join(output_subdir, name), rate, clip)
         if saveMetadata:
             with open(os.path.join(output_subdir, self.metadata_filename), 'a') as meta_file:
-                metadata = f"{name}|{segment['text']}"
+                metadata = f"{name}|{segment.text}"
                 meta_file.write(metadata)
+                meta_file.write('\n')
+
 def main():
     """
     Command-line interface for InputClipper. Allows users to clip all segments or a single file.
     """
-                meta_file.write('\n')
-            
 
-    def clip_segments(self, output_dir_name, wav_filename, segment_filename, ignore=None, skipOrRemove=IgnoreBehavior.SKIP):
+    def clip_segments(self, output_dir_name: str, wav_filename: str, segment_filename: str, ignore: List[str] = None, skipOrRemove: IgnoreBehavior = IgnoreBehavior.SKIP) -> None:
         print('CLIP SEGMENTS: ', 'WAV FILE ', wav_filename, 'SEGMENT FILE ', segment_filename)
         full_segment_file_path = os.path.join(self.segment_dir, segment_filename)
         print("OPEN FILE " + full_segment_file_path)
         with open(full_segment_file_path, 'r') as f:
             contents = f.read()
             
-            parsed: List[Segment] = json.loads(contents)#[json.loads(raw) for raw in contents]
+            parsed_dicts: List[dict] = json.loads(contents)
+            parsed: List[Segment] = [Segment(**entry) for entry in parsed_dicts]
 
             # TODO: BUG skipping any entries fucks up timestamps
             for entry in parsed:
-                # entry = SimpleNamespace(**entry)
-                print("READING " + str(f"{entry['speaker']} from {entry['minuteStart']}:{entry['secondStart']} to {entry['minuteStop']}:{entry['secondStop']}"))
-                # break
+                print("READING " + str(f"{entry.speaker} from {entry.minuteStart}:{entry.secondStart} to {entry.minuteStop}:{entry.secondStop}"))
                 if skipOrRemove == IgnoreBehavior.REMOVE_GROUP:
                     raise NotImplementedError("IgnoreBehavior.REMOVE replacement regex behavior not implemented.")
                 elif skipOrRemove == IgnoreBehavior.SKIP:
-                    if any([re.search(x, entry['text']) for x in ignore]):
+                    if any([re.search(x, entry.text) for x in ignore]):
                         print("SKIPPING " + str(entry))
                         continue
                 elif skipOrRemove == IgnoreBehavior.IGNORED_ONLY:
-                    if not any([re.search(x, entry['text']) for x in ignore]):
+                    if not any([re.search(x, entry.text) for x in ignore]):
                         continue
                 self._clip(output_dir_name, wav_filename, entry)
 

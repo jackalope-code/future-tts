@@ -13,7 +13,7 @@ class Segment(JSONEncoder):
         minuteStop (int): End minute of the segment in the audio.
         secondStop (int): End second of the segment in the audio.
     """
-    def __init__(self, speaker, text, minuteStart, secondStart, minuteStop, secondStop):
+    def __init__(self, speaker: str, text: str, minuteStart: int, secondStart: int, minuteStop: int, secondStop: int):
         """
         Initialize a Segment instance.
         Args:
@@ -31,7 +31,7 @@ class Segment(JSONEncoder):
         self.minuteStop = minuteStop
         self.secondStop = secondStop
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Segment(\'{self.speaker}\', \'{self.text}\', {self.minuteStart}:{self.secondStart}-{self.minuteStop}:{self.secondStop})'
     # Optionally, override default for JSON serialization
     # def default(self, obj):
