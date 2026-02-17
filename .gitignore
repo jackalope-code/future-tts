@@ -8,4 +8,4 @@ seg_out.json
 train.py
 vocoder.py
 
-sexamples/futurama/segment_data
+examples/futurama/segment_data
