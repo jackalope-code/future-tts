@@ -11,6 +11,14 @@ import argparse
 
 # TODO: implement ignore behavior
 class IgnoreBehavior(Enum):
+    """
+    Enum for different behaviors when encountering ignored segments.
+    REMOVE_GROUP: Remove entire group matching ignore pattern.
+    SKIP: Skip segments matching ignore pattern.
+    IGNORED_ONLY: Only process segments matching ignore pattern.
+    NO_SKIPS: Do not skip any segments.
+    REMOVE_SYMBOLS: Remove symbols from segments (not implemented).
+    """
     REMOVE_GROUP = 0,
     SKIP = 1,
     IGNORED_ONLY = 2,
@@ -19,6 +27,16 @@ class IgnoreBehavior(Enum):
 
 # input args: filename, segment file, output directory path
 # outputs: segmented files in the specified output directory (directory should already exist for now)
+    
+    def _clip(self, subdir_name, wav_path, segment: Segment, saveMetadata=True):
+        """
+        Internal method to clip a segment from a wav file and save it.
+        Args:
+            subdir_name (str): Subdirectory for output.
+            wav_path (str): Path to the wav file.
+            segment (Segment): Segment data dict.
+            saveMetadata (bool): Whether to append metadata for this clip.
+        """
 
 class InputClipper:
     def __init__(self, wav_dir, segment_dir, output_dir, metadata_filename="metadata.txt") -> None:
@@ -58,6 +76,10 @@ class InputClipper:
             with open(os.path.join(output_subdir, self.metadata_filename), 'a') as meta_file:
                 metadata = f"{name}|{segment['text']}"
                 meta_file.write(metadata)
+def main():
+    """
+    Command-line interface for InputClipper. Allows users to clip all segments or a single file.
+    """
                 meta_file.write('\n')
             
 

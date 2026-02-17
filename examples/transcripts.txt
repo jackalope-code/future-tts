@@ -1,0 +1,2 @@
+episode1.wav|https://theinfosphere.org/Transcript:Space_Pilot_3000
+episode2.wav|https://theinfosphere.org/Transcript:Episode_2

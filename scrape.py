@@ -11,15 +11,28 @@ from segment import Segment
 
 
 def parse_time(time_id):
+    """
+    Parse a time string from an HTML id (e.g., 'time-12-34') into [minute, second].
+    Args:
+        time_id (str): The id string to parse.
+    Returns:
+        list: [minute, second] as strings.
+    """
     return time_id[len('time-'):].split('-')
 
 def get_segments_from_url(url: str):
+    """
+    Scrape a transcript page and extract segments with speaker and timing info.
+    Args:
+        url (str): The URL of the transcript page.
+    Returns:
+        list: List of Segment objects.
+    """
     print("OPENING URL " + url)
     page = requests.get(url)
 
     # Init soup
     soup = BeautifulSoup(page.text, "html.parser")
-    # transcript = soup.find("div", {"class": "mw-parser-output"})
     transcript = soup.find("div", {"id": "bodyContent"})
     sections = transcript.find_all("div", {"class": "poem"})
 
@@ -36,8 +49,6 @@ def get_segments_from_url(url: str):
             print(section.p)
             print("CONTINUING")
             continue
-        
-        # Timestamp ([m, s])
         current_time = parse_time(section.p.span['id'])
 
         # Update segments
@@ -68,24 +79,31 @@ def get_segments_from_url(url: str):
     return segments
 
 def write_segments(url: str, segment_output_filename: pathlib.Path):
+    """
+    Write segments extracted from a URL to a JSON file.
+    Args:
+        url (str): The transcript page URL.
+        segment_output_filename (Path): Output file path for segments JSON.
+    """
     segments = get_segments_from_url(url)
     with open(segment_output_filename, "w+") as f:
         f.write(json.dumps(segments, default=(lambda x: x.__dict__ )))
-    print("Output saved to " + segment_output_filename)
+    print("Output saved to " + str(segment_output_filename))
 
 def main():
+    """
+    Command-line interface for transcript scraping and segment extraction.
+    Reads a transcript list file and outputs segment JSON files for each entry.
+    """
     parser = argparse.ArgumentParser(
-                    prog='Transcript Scrape and Transform CLI',
-                    description='Read transcripts and transform them into Segment data.')
-                    # epilog='Text at the bottom of help')
-
+        prog='Transcript Scrape and Transform CLI',
+        description='Read transcripts and transform them into Segment data.'
+    )
     parser.add_argument('-t', '--transcript',
                        type=pathlib.Path,
                        default='transcripts.txt')
-    
     parser.add_argument('output_dir', help='Path to generate segments folder in.', nargs='?', default='segment_data')
 
-    
     args = parser.parse_args()
 
     # Output dir check/creation
